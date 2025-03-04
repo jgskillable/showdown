@@ -97,14 +97,14 @@ showdown.subParser('lists', function (text, options, globals) {
       // Has a double return (multi paragraph) or
       // Has sublist
       if (m1 || (item.search(/\n{2,}/) > -1)) {
-        item = showdown.subParser('makehtml.githubCodeBlocks')(item, options, globals);
-        item = showdown.subParser('makehtml.blockQuotes')(item, options, globals);
-        item = showdown.subParser('makehtml.headers')(item, options, globals);
-        item = showdown.subParser('makehtml.lists')(item, options, globals);
-        item = showdown.subParser('makehtml.codeBlocks')(item, options, globals);
-        item = showdown.subParser('makehtml.tables')(item, options, globals);
-        item = showdown.subParser('makehtml.hashHTMLBlocks')(item, options, globals);
-        //item = showdown.subParser('makehtml.paragraphs')(item, options, globals);
+        item = showdown.subParser('githubCodeBlocks')(item, options, globals);
+        item = showdown.subParser('blockQuotes')(item, options, globals);
+        item = showdown.subParser('headers')(item, options, globals);
+        item = showdown.subParser('lists')(item, options, globals);
+        item = showdown.subParser('codeBlocks')(item, options, globals);
+        item = showdown.subParser('tables')(item, options, globals);
+        item = showdown.subParser('hashHTMLBlocks')(item, options, globals);
+        //item = showdown.subParser('paragraphs')(item, options, globals);
 
         // TODO: This is a copy of the paragraph parser
         // This is a provisory fix for issue #494
@@ -128,7 +128,7 @@ showdown.subParser('lists', function (text, options, globals) {
             // test for presence of characters to prevent empty lines being parsed
             // as paragraphs (resulting in undesired extra empty paragraphs)
           } else if (str.search(/\S/) >= 0) {
-            str = showdown.subParser('makehtml.spanGamut')(str, options, globals);
+            str = showdown.subParser('spanGamut')(str, options, globals);
             str = str.replace(/^([ \t]*)/g, '<p>');
             str += '</p>';
             grafsOut.push(str);
