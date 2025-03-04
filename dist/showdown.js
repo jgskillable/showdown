@@ -1,4 +1,4 @@
-;/*! showdown v 2.1.0 - 21-04-2022 */
+;/*! showdown v 2.1.0 - 04-03-2025 */
 (function(){
 /**
  * Created by Tivie on 13-07-2015.
@@ -4048,12 +4048,64 @@ showdown.subParser('lists', function (text, options, globals) {
         return '¨A' + wm2;
       });
 
+      // SPECIAL CASE: a heading followed by a paragraph of text that is not separated by a double newline
+      // or/nor indented. ex:
+      //
+      // - # foo
+      // bar is great
+      //
+      // While this does now follow the spec per se, not allowing for this might cause confusion since
+      // header blocks don't need double-newlines after
+      if (/^#+.+\n.+/.test(item)) {
+        item = item.replace(/^(#+.+)$/m, '$1\n');
+      }
+
       // m1 - Leading line or
       // Has a double return (multi paragraph) or
       // Has sublist
       if (m1 || (item.search(/\n{2,}/) > -1)) {
         item = showdown.subParser('githubCodeBlocks')(item, options, globals);
-        item = showdown.subParser('blockGamut')(item, options, globals);
+        item = showdown.subParser('blockQuotes')(item, options, globals);
+        item = showdown.subParser('headers')(item, options, globals);
+        item = showdown.subParser('lists')(item, options, globals);
+        item = showdown.subParser('codeBlocks')(item, options, globals);
+        item = showdown.subParser('tables')(item, options, globals);
+        item = showdown.subParser('hashHTMLBlocks')(item, options, globals);
+        //item = showdown.subParser('paragraphs')(item, options, globals);
+
+        // TODO: This is a copy of the paragraph parser
+        // This is a provisory fix for issue #494
+        // For a permanente fix we need to rewrite the paragraph parser, passing the unhashify logic outside
+        // so that we can call the paragraph parser without accidently unashifying previously parsed blocks
+
+        // Strip leading and trailing lines:
+        item = item.replace(/^\n+/g, '');
+        item = item.replace(/\n+$/g, '');
+
+        var grafs = item.split(/\n{2,}/g),
+            grafsOut = [],
+            end = grafs.length; // Wrap <p> tags
+
+        for (var i = 0; i < end; i++) {
+          var str = grafs[i];
+          // if this is an HTML marker, copy it
+          if (str.search(/¨([KG])(\d+)\1/g) >= 0) {
+            grafsOut.push(str);
+
+            // test for presence of characters to prevent empty lines being parsed
+            // as paragraphs (resulting in undesired extra empty paragraphs)
+          } else if (str.search(/\S/) >= 0) {
+            str = showdown.subParser('spanGamut')(str, options, globals);
+            str = str.replace(/^([ \t]*)/g, '<p>');
+            str += '</p>';
+            grafsOut.push(str);
+          }
+        }
+        item = grafsOut.join('\n');
+        // Strip leading and trailing lines:
+        item = item.replace(/^\n+/g, '');
+        item = item.replace(/\n+$/g, '');
+
       } else {
         // Recursion for sub-lists:
         item = showdown.subParser('lists')(item, options, globals);
